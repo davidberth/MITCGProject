@@ -1,0 +1,32 @@
+[project]
+name = "Ray"  
+version = "0.1.0"  
+description = "This is a custom ray tracer for the MIT Computer Graphics final project"  
+readme = "README.md" 
+requires-python = ">=3.11"
+keywords = ["MIT", "School", "Ray Tracing"]
+authors = [
+  {name = "David M. Berthiaume", email = "david.berthiaume@g.harvard.edu" }
+]
+
+classifiers = [ 
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: MIT Computer Graphics",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3 :: Only",
+]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.optional-dependencies] # Optional
+dev = ["matplotlib"]
+test = ["coverage"]
+
+[build-system]
+requires = ["setuptools>=43.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["Ray"]
+exclude = ["data*", "tests*", "work*", "proposal*", "work*"]
