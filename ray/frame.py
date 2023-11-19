@@ -1,11 +1,14 @@
 import numpy as np
 from ray import caster
+from ray.scene import Scene
 from PIL import Image
+import time
 
 
 class Frame:
     frame = None
     camera_pos = None
+    scene = None
 
     def __init__(self, width: int, height: int):
         self.width = width
@@ -20,11 +23,43 @@ class Frame:
         self.viewport_z = -5.0
         self.viewport_radius = 2.0
 
-    def cast_rays(self):
-        directions = caster.cast_rays(
-            self.frame, self.camera_pos, self.viewport_z, self.viewport_radius
+        self.scene = Scene()
+
+    def get_rays(self):
+        xx = np.linspace(
+            -self.viewport_radius,
+            self.viewport_radius,
+            self.width,
         )
-        print(directions)
+        yy = np.linspace(
+            -self.viewport_radius,
+            self.viewport_radius,
+            self.height,
+        )
+        x, y = np.meshgrid(xx, yy)
+        z = np.full_like(x, self.viewport_z)
+        target_points = np.dstack((x, y, z))
+        directions = target_points - self.camera_pos
+        norms = np.linalg.norm(directions, axis=2)
+        directions[:, :, 0] /= norms
+        directions[:, :, 1] /= norms
+        directions[:, :, 2] /= norms
+
+        return directions
+
+    def cast_rays(self):
+        directions = self.get_rays()
+        start = time.time()
+        caster.cast_rays(
+            self.camera_pos,
+            directions,
+            self.frame,
+            self.scene.centers,
+            self.scene.radii,
+            self.scene.colors,
+        )
+        end = time.time()
+        print("total time", end - start)
 
     def write(self, file: str):
         img = Image.fromarray(self.frame, "RGB")

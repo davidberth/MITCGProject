@@ -1,0 +1,5 @@
+data/*
+qgis/*
+Ray.egg-info/*
+ray/__pycache__/*
+work/

@@ -6,4 +6,3 @@ frame.cast_rays()
 
 
 frame.write("test.png")
-# os.system("test.png")
