@@ -4,7 +4,8 @@ import geopandas as gpd
 import glob
 import os
 from osgeo import gdal
-
+import sys
+import raster
 
 width = 1000
 half_width = width / 2
@@ -16,7 +17,7 @@ gdal_translsate = "gdal_translate.exe "
 
 transformer = Transformer.from_crs("EPSG:4326", "EPSG:26919")
 
-g = geocoder.osm("7 donnelly rd spencer ma")
+g = geocoder.osm(sys.argv[1])
 lat, lon = g.latlng
 print("lat/lon center", lat, lon)
 
@@ -56,3 +57,9 @@ ds = gdal.Translate(destination, ds, projWin=[xmin, ymax, xmax, ymin])
 ds = None
 
 print(" done")
+
+# now let's convert the land shapefile to a raster
+
+raster.shapefile_to_raster(
+    "work/land.shp", "work/dem.tif", "work/land.tif", "COVERCODE"
+)

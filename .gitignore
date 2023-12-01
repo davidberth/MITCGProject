@@ -3,3 +3,7 @@ qgis/*
 Ray.egg-info/*
 ray/__pycache__/*
 work/
+__pycache__/raster.cpython-311.pyc
+ray/__pycache__/caster.cpython-311.pyc
+ray/__pycache__/frame.cpython-311.pyc
+ray/__pycache__/caster.cpython-311.pyc

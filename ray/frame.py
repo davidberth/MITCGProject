@@ -54,8 +54,8 @@ class Frame:
             self.camera_pos,
             directions,
             self.frame,
-            self.scene.centers,
-            self.scene.radii,
+            self.scene.gtypes,
+            self.scene.geometry,
             self.scene.colors,
         )
         end = time.time()
