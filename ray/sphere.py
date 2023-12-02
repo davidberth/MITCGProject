@@ -4,6 +4,21 @@ from numba import njit, f8
 
 @njit(f8(f8[:], f8[:], f8[:], f8), fastmath=True)
 def intersect(origin, direction, geom, t):
+    """
+    Computes the intersection of a ray and a sphere.
+
+    Parameters:
+    origin (numpy.ndarray): The origin of the ray.
+    direction (numpy.ndarray): The direction of the ray.
+    geom (numpy.ndarray): The geometry of the sphere,
+    where the first three elements are the center of the
+    sphere and the fourth element is the radius.
+    t (float): The time parameter for the ray.
+
+    Returns:
+    float: The time at which the ray intersects the sphere.
+    Returns -9999.0 if there is no intersection.
+    """
     center = geom[:3]
     radius = geom[3]
     a = (

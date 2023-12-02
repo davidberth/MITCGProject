@@ -9,8 +9,10 @@ def intersect(ray_origin, ray_direction, triangle_vertices, t):
 
     :param ray_origin: The origin of the ray (numpy array)
     :param ray_direction: The direction of the ray (numpy array)
-    :param triangle_vertices: A list of three vertices, each a numpy array, representing a triangle
-    :return: The value t along the ray where it intersects the triangle or None if no intersection.
+    :param triangle_vertices: A list of three vertices,
+    each a numpy array, representing a triangle
+    :return: The value t along the ray where it intersects the triangle
+    or None if no intersection.
     """
     # Unpack the triangle vertices
     v0, v1, v2 = (
@@ -26,7 +28,8 @@ def intersect(ray_origin, ray_direction, triangle_vertices, t):
     # Begin calculating determinant - also used to calculate u parameter
     pvec = np.cross(ray_direction, edge2)
 
-    # If determinant is near zero, ray lies in plane of triangle or ray is parallel to plane of triangle
+    # If determinant is near zero, ray lies in plane of triangle or ray is
+    # parallel to plane of triangle
     det = edge1.dot(pvec)
 
     # NOT CULLING

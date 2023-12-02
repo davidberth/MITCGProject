@@ -3,6 +3,8 @@ from ray import caster
 from ray.scene import Scene
 from PIL import Image
 import time
+import collect
+import build
 
 
 class Frame:
@@ -60,6 +62,12 @@ class Frame:
         )
         end = time.time()
         print("total time", end - start)
+
+    def build_scene(self, address):
+        # now we build the triangles
+        collect.process_address(address)
+        build.raster_to_mesh("work/dem.tif", "work/dem.obj", self.scene)
+        self.scene.finalize()
 
     def write(self, file: str):
         img = Image.fromarray(self.frame, "RGB")

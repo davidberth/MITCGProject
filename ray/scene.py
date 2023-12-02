@@ -10,35 +10,16 @@ class Scene:
         self.colors = []
         self.gtypes = []
 
-        self.gtypes.append(1)
-        self.geometry.append(
-            np.array((0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0))
-        )
-        self.colors.append(np.array((255, 0, 0)).astype(np.uint8))
-
-        self.gtypes.append(1)
-        self.geometry.append(
-            np.array((0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 4.0, 4.0, 1.0))
-        )
-        self.colors.append(np.array((0, 0, 255)).astype(np.uint8))
-
-        """for i in range(500):
-            cent = (
-                np.random.rand() * 10.0 - 5.0,
-                np.random.rand() * 10.0 - 5.0,
-                np.random.rand() - 0.5,
-            )
-
-            rad = np.random.rand() + 0.2
-            color = (
-                np.random.randint(0, 255),
-                np.random.randint(0, 255),
-                np.random.randint(0, 255),
-            )
-            self.gtypes.append(0)
-
-            self.geometry.append(np.array((cent[0], cent[1], cent[2], rad)))
-            self.colors.append(np.array(color).astype(np.uint8))"""
+    def finalize(self):
         self.geometry = np.array(self.geometry)
         self.colors = np.array(self.colors)
         self.gtypes = np.array(self.gtypes).astype(np.uint8)
+
+    def add_triangle(self, v1, v2, v3, col):
+        self.gtypes.append(1)
+        self.geometry.append(
+            np.array(
+                (v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], v3[0], v3[1], v3[2])
+            )
+        )
+        self.colors.append(np.array(col).astype(np.uint8))
