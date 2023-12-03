@@ -5,7 +5,6 @@ import glob
 import os
 from osgeo import gdal
 import raster
-import build
 import params
 
 

@@ -1,4 +1,5 @@
 from numba import njit
+import numpy as np
 
 
 @njit
@@ -51,6 +52,7 @@ def intersect(ray_origin, ray_direction, aabb):
     return t_min
 
 
+@njit
 def aabb_intersects(aabb1, aabb2):
     """
     Check if two axis-aligned bounding boxes intersect.
@@ -66,3 +68,42 @@ def aabb_intersects(aabb1, aabb2):
             return False
 
     return True
+
+
+@njit
+def build_haabbs(aabbs, nb):
+    haabbs = []
+    haabbsi = []
+    xmin = np.min(aabbs[:, 0])
+    ymin = np.min(aabbs[:, 1])
+    zmin = np.min(aabbs[:, 2])
+    xmax = np.max(aabbs[:, 3])
+    ymax = np.max(aabbs[:, 4])
+    zmax = np.max(aabbs[:, 5])
+
+    xd = (xmax - xmin) / nb
+    yd = (ymax - ymin) / nb
+    zd = (zmax - zmin) / nb
+
+    print(xmin, ymin, zmin, xmax, ymax, zmax, xd, yd, zd)
+    for x in np.arange(xmin, xmax, xd):
+        for y in np.arange(ymin, ymax, yd):
+            for z in np.arange(zmin, zmax, zd):
+                oaabb = np.array(
+                    (x, y, z, x + xd, y + yd, z + zd),
+                    dtype=np.float32,
+                )
+
+                li = np.zeros((1500), dtype=np.int32)
+                li[:] = -1
+                k = 0
+                for i, laabb in enumerate(aabbs):
+                    if aabb_intersects(laabb, oaabb):
+                        li[k] = i
+                        k += 1
+
+                if k > 0:
+                    haabbs.append(oaabb)
+                    haabbsi.append(li)
+
+    return haabbs, haabbsi

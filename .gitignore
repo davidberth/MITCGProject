@@ -7,3 +7,7 @@ __pycache__/raster.cpython-311.pyc
 ray/__pycache__/caster.cpython-311.pyc
 ray/__pycache__/frame.cpython-311.pyc
 ray/__pycache__/caster.cpython-311.pyc
+__pycache__/build.cpython-311.pyc
+__pycache__/collect.cpython-311.pyc
+__pycache__/params.cpython-311.pyc
+
