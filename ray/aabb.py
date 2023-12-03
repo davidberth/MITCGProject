@@ -70,7 +70,7 @@ def aabb_intersects(aabb1, aabb2):
     return True
 
 
-@njit
+@njit(fastmath=True)
 def build_haabbs(aabbs, nb):
     haabbs = []
     haabbsi = []
@@ -88,9 +88,9 @@ def build_haabbs(aabbs, nb):
 
     print(xmin, ymin, zmin, xmax, ymax, zmax, xd, yd, zd)
 
-    for z in np.arange(zmin, zmax, zd):
-        for y in np.arange(ymin, ymax, yd):
-            for x in np.arange(xmin, xmax, xd):
+    for z in np.arange(zmin, zmax - 0.02, zd):
+        for y in np.arange(ymin, ymax - 0.02, yd):
+            for x in np.arange(xmin, xmax - 0.02, xd):
                 oaabb = np.array(
                     (x, y, z, x + xd, y + yd, z + zd),
                     dtype=np.float32,
@@ -101,33 +101,51 @@ def build_haabbs(aabbs, nb):
                 k = 0
                 for i, laabb in enumerate(aabbs):
                     if aabb_intersects(laabb, oaabb):
-                        li[k] = i
+                        if k < 1500:
+                            li[k] = i
                         k += 1
 
                 haabbs.append(oaabb)
                 haabbsi.append(li)
                 haabbsk.append(k)
 
-    # build level 1 bbaas
+    return (haabbs, haabbsi, haabbsk)
+
+
+def build_labs(aabbs, nb, nbl):
+    xmin = np.min(aabbs[:, 0])
+    ymin = np.min(aabbs[:, 1])
+    zmin = np.min(aabbs[:, 2])
+    xmax = np.max(aabbs[:, 3])
+    ymax = np.max(aabbs[:, 4])
+    zmax = np.max(aabbs[:, 5])
+
+    xd = (xmax - xmin) / nb
+    yd = (ymax - ymin) / nb
+    zd = (zmax - zmin) / nb
+    # build level 1 AABBs
     labs = []
     labsc = []
-    for z in np.arange(zmin, zmax, zd * 4):
-        for y in np.arange(ymin, ymax, yd * 4):
-            for x in np.arange(xmin, xmax, xd * 4):
+    # assume divisible
+    nbli = int((nb + 0.001) // nbl)
+
+    for zi, z in enumerate(np.arange(zmin, zmax - 0.002, zd * nbli)):
+        for yi, y in enumerate(np.arange(ymin, ymax - 0.002, yd * nbli)):
+            for xi, x in enumerate(np.arange(xmin, xmax - 0.002, xd * nbli)):
                 oaabb = np.array(
-                    (x, y, z, x + xd * 4, y + yd * 4, z + zd * 4),
+                    (x, y, z, x + xd * nbli, y + yd * nbli, z + zd * nbli),
                     dtype=np.float32,
                 )
 
-                lic = np.zeros((4 * 4 * 4), dtype=np.int32)
+                lic = np.zeros((nbli * nbli * nbli), dtype=np.int32)
 
                 lid = 0
-                for zz in range(4):
-                    for yy in range(4):
-                        for xx in range(4):
-                            kidz = z * 4 + zz
-                            kidy = y * 4 + yy
-                            kidx = x * 4 + xx
+                for zz in range(nbli):
+                    for yy in range(nbli):
+                        for xx in range(nbli):
+                            kidz = zi * nbli + zz
+                            kidy = yi * nbli + yy
+                            kidx = xi * nbli + xx
                             kid = kidx + kidy * nb + kidz * nb * nb
                             lic[lid] = kid
                             lid += 1
@@ -135,10 +153,4 @@ def build_haabbs(aabbs, nb):
                 labs.append(oaabb)
                 labsc.append(lic)
 
-    return (
-        haabbs,
-        haabbsi,
-        haabbsk,
-        labs,
-        labsc,
-    )
+    return (labs, labsc)

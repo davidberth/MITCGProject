@@ -37,7 +37,7 @@ class Frame:
         self.half_width = width / 2
         self.half_height = height / 2
 
-        self.frame = np.zeros((width, height, 3), np.uint8)
+        self.frame = np.zeros((height, width, 3), np.float32)
 
         # x, y, z
         self.camera_pos = np.array(params.camera_pos)
@@ -128,6 +128,7 @@ class Frame:
         self.scene.finalize()
 
     def write(self, file: str):
-        self.frame = self.frame[::-1, :, :]
+        self.frame = self.frame[::-1, :, :] * 255.0
+        self.frame = self.frame.astype(np.uint8)
         img = Image.fromarray(self.frame, "RGB")
         img.save(file, "PNG")

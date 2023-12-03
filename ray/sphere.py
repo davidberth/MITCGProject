@@ -63,3 +63,16 @@ def intersect(origin, direction, geom):
             return t_plus
         else:
             return t_minus
+
+
+def get_aabb(geom):
+    return np.array(
+        (
+            geom[0] - geom[3],
+            geom[1] - geom[3],
+            geom[2] - geom[3],
+            geom[0] + geom[3],
+            geom[1] + geom[3],
+            geom[2] + geom[3],
+        )
+    )

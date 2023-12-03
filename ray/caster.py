@@ -21,24 +21,30 @@ def cast_ray(
     labsc,
 ):
     t = 999999.0
-    col = np.array((0, 0, 0), dtype=np.uint8)
+    col = np.array((0, 0, 0), dtype=np.float32)
 
-    for i in range(haabbs.shape[0]):
-        ha = haabbs[i, :]
-        if hk[i] > 0 and aabb.intersect(origin, direction, ha) > 0:
-            for j in hi[i]:
-                if j == -1:
-                    break
-                gtype = gtypes[j]
-                laabb = aabbs[j, :]
-                if aabb.intersect(origin, direction, laabb) > 0:
-                    if gtype == 0:
-                        tp = sphere.intersect(origin, direction, geoms[j, :])
-                    elif gtype == 1:
-                        tp = triangle.intersect(origin, direction, geoms[j, :])
-                    if tp > 0 and tp < t:
-                        t = tp
-                        col = colors[j, :]
+    for k in range(labs.shape[0]):
+        if aabb.intersect(origin, direction, labs[k, :]) > 0:
+            for i in labsc[k, :]:
+                ha = haabbs[i, :]
+                if hk[i] > 0 and aabb.intersect(origin, direction, ha) > 0:
+                    for j in hi[i]:
+                        if j == -1:
+                            break
+                        gtype = gtypes[j]
+                        laabb = aabbs[j, :]
+                        if aabb.intersect(origin, direction, laabb) > 0:
+                            if gtype == 0:
+                                tp = sphere.intersect(
+                                    origin, direction, geoms[j, :]
+                                )
+                            elif gtype == 1:
+                                tp = triangle.intersect(
+                                    origin, direction, geoms[j, :]
+                                )
+                            if tp > 0 and tp < t:
+                                t = tp
+                                col = colors[j, :]
 
     return col
 

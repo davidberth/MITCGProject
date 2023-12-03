@@ -4,10 +4,10 @@ from scipy.ndimage import gaussian_filter
 
 
 def generate_color(z):
-    red = z * 255.0
-    red = np.clip(red, 0, 255)
-    blue = 255.0 - red
-    return [red, 255, blue]
+    red = z * 8.0
+    red = np.clip(red, 0.0, 1.0)
+    blue = 1.0 - red
+    return [red, 0.5, blue]
 
 
 def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
@@ -29,7 +29,7 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
     # Apply a Gaussian filter to the raster data
 
     # Normalize z
-    h = (h - np.min(h)) * 0.05
+    h = (h - np.min(h)) * 0.01
     h += 1
 
     h = gaussian_filter(h, sigma=sigma)
@@ -51,6 +51,11 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
     y = np.sin(theta) * np.sin(phi) * h
     z = np.cos(phi) * h
 
+    lengths = np.sqrt(x**2 + y**2 + z**2)
+    nx = x / lengths
+    ny = y / lengths
+    nz = z / lengths
+
     for i in range(z.shape[0] - 1):
         if i % 10 == 0:
             print("adding triangles for row ", i)
@@ -71,6 +76,9 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
                     (x[upper_left], z[upper_left], y[upper_left]),
                     (x[lower_left], z[lower_left], y[lower_left]),
                     (x[lower_right], z[lower_right], y[lower_right]),
+                    (nx[upper_left], nz[upper_left], ny[upper_left]),
+                    (nx[lower_left], nz[lower_left], ny[lower_left]),
+                    (nx[lower_right], nz[lower_right], ny[lower_right]),
                     generate_color(h[upper_right] - 1),
                 )
 
@@ -83,5 +91,8 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
                     (x[upper_left], z[upper_left], y[upper_left]),
                     (x[lower_right], z[lower_right], y[lower_right]),
                     (x[upper_right], z[upper_right], y[upper_right]),
+                    (nx[upper_left], nz[upper_left], ny[upper_left]),
+                    (nx[lower_right], nz[lower_right], ny[lower_right]),
+                    (nx[upper_right], nz[upper_right], ny[upper_right]),
                     generate_color(h[upper_right] - 1),
                 )
