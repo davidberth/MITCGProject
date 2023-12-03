@@ -31,10 +31,15 @@ class Scene:
         # build the haabbs
         print("building haabbs")
         b = time.time()
-        haabbs, haabbsi = aabb.build_haabbs(self.aabbs, params.num_haabbs)
+        haabbs, haabbsi, haabbsk, labs, labsc = aabb.build_haabbs(
+            self.aabbs, params.num_haabbs
+        )
         e = time.time()
         self.haabbs = np.array(haabbs, dtype=np.float32)
         self.haabbsi = np.array(haabbsi, dtype=np.int32)
+        self.haabbsk = np.array(haabbsk, dtype=np.int32)
+        self.labs = np.array(labs, dtype=np.float32)
+        self.labsc = np.array(labsc, dtype=np.int32)
         print(" done building haabbs in", e - b)
 
     def add_triangle(self, v1, v2, v3, col):

@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit, f4, u1, void, prange
+from numba import njit, prange
 
 from ray import sphere
 from ray import triangle
@@ -7,13 +7,25 @@ from ray import aabb
 
 
 @njit(fastmath=True)
-def cast_ray(origin, direction, gtypes, geoms, aabbs, colors, haabbs, hi):
+def cast_ray(
+    origin,
+    direction,
+    gtypes,
+    geoms,
+    aabbs,
+    colors,
+    haabbs,
+    hi,
+    hk,
+    labs,
+    labsc,
+):
     t = 999999.0
     col = np.array((0, 0, 0), dtype=np.uint8)
 
     for i in range(haabbs.shape[0]):
         ha = haabbs[i, :]
-        if aabb.intersect(origin, direction, ha) > 0:
+        if hk[i] > 0 and aabb.intersect(origin, direction, ha) > 0:
             for j in hi[i]:
                 if j == -1:
                     break
@@ -36,7 +48,18 @@ def cast_ray(origin, direction, gtypes, geoms, aabbs, colors, haabbs, hi):
     parallel=True,
 )
 def cast_rays(
-    origin, directions, buffer, gtypes, geoms, aabbs, colors, haabbs, hi
+    origin,
+    directions,
+    buffer,
+    gtypes,
+    geoms,
+    aabbs,
+    colors,
+    haabbs,
+    hi,
+    hk,
+    labs,
+    labsc,
 ):
     width, height = directions.shape[:2]
 
@@ -51,4 +74,7 @@ def cast_rays(
                 colors,
                 haabbs,
                 hi,
+                hk,
+                labs,
+                labsc,
             )

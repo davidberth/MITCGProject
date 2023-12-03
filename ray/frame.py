@@ -113,6 +113,9 @@ class Frame:
             self.scene.colors,
             self.scene.haabbs,
             self.scene.haabbsi,
+            self.scene.haabbsk,
+            self.scene.labs,
+            self.scene.labsc,
         )
         end = time.time()
         print("total time", end - start)

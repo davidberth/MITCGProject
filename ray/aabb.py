@@ -74,6 +74,7 @@ def aabb_intersects(aabb1, aabb2):
 def build_haabbs(aabbs, nb):
     haabbs = []
     haabbsi = []
+    haabbsk = []
     xmin = np.min(aabbs[:, 0])
     ymin = np.min(aabbs[:, 1])
     zmin = np.min(aabbs[:, 2])
@@ -86,9 +87,10 @@ def build_haabbs(aabbs, nb):
     zd = (zmax - zmin) / nb
 
     print(xmin, ymin, zmin, xmax, ymax, zmax, xd, yd, zd)
-    for x in np.arange(xmin, xmax, xd):
+
+    for z in np.arange(zmin, zmax, zd):
         for y in np.arange(ymin, ymax, yd):
-            for z in np.arange(zmin, zmax, zd):
+            for x in np.arange(xmin, xmax, xd):
                 oaabb = np.array(
                     (x, y, z, x + xd, y + yd, z + zd),
                     dtype=np.float32,
@@ -102,8 +104,41 @@ def build_haabbs(aabbs, nb):
                         li[k] = i
                         k += 1
 
-                if k > 0:
-                    haabbs.append(oaabb)
-                    haabbsi.append(li)
+                haabbs.append(oaabb)
+                haabbsi.append(li)
+                haabbsk.append(k)
 
-    return haabbs, haabbsi
+    # build level 1 bbaas
+    labs = []
+    labsc = []
+    for z in np.arange(zmin, zmax, zd * 4):
+        for y in np.arange(ymin, ymax, yd * 4):
+            for x in np.arange(xmin, xmax, xd * 4):
+                oaabb = np.array(
+                    (x, y, z, x + xd * 4, y + yd * 4, z + zd * 4),
+                    dtype=np.float32,
+                )
+
+                lic = np.zeros((4 * 4 * 4), dtype=np.int32)
+
+                lid = 0
+                for zz in range(4):
+                    for yy in range(4):
+                        for xx in range(4):
+                            kidz = z * 4 + zz
+                            kidy = y * 4 + yy
+                            kidx = x * 4 + xx
+                            kid = kidx + kidy * nb + kidz * nb * nb
+                            lic[lid] = kid
+                            lid += 1
+
+                labs.append(oaabb)
+                labsc.append(lic)
+
+    return (
+        haabbs,
+        haabbsi,
+        haabbsk,
+        labs,
+        labsc,
+    )

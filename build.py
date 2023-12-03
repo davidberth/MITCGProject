@@ -1,11 +1,13 @@
 import numpy as np
 import rasterio
 from scipy.ndimage import gaussian_filter
-import random
 
 
-def generate_random_color():
-    return [random.randint(0, 255) for _ in range(3)]
+def generate_color(z):
+    red = z * 255.0
+    red = np.clip(red, 0, 255)
+    blue = 255.0 - red
+    return [red, 255, blue]
 
 
 def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
@@ -22,25 +24,22 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
     # Open the raster file
     with rasterio.open(input_raster) as ds:
         # Read the raster data
-        z = ds.read(1)
+        h = ds.read(1)
 
     # Apply a Gaussian filter to the raster data
 
     # Normalize z
-    z = (z - np.min(z)) * 0.05
-    z += 1
-    # z *= 0.1
-    # make the radius of the planet 200 to min elev
-    # z += 2
+    h = (h - np.min(h)) * 0.05
+    h += 1
 
-    z = gaussian_filter(z, sigma=sigma)
+    h = gaussian_filter(h, sigma=sigma)
 
     # Create 2D arrays of x and y coordinates
-    y, x = np.mgrid[: z.shape[0], : z.shape[1]]
+    y, x = np.mgrid[: h.shape[0], : h.shape[1]]
 
     # Normalize x and y coordinates to [-1, 1]
-    x = 2 * (x / z.shape[1]) - 1
-    y = 2 * (y / z.shape[0]) - 1
+    x = 2 * (x / h.shape[1]) - 1
+    y = 2 * (y / h.shape[0]) - 1
 
     # Convert x and y to spherical coordinates
     r = np.sqrt(x**2 + y**2)
@@ -48,12 +47,13 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
     phi = r * np.pi / 2
 
     # Convert spherical coordinates to 3D coordinates
-    x = np.cos(theta) * np.sin(phi) * z
-    y = np.sin(theta) * np.sin(phi) * z
-    z = np.cos(phi) * z
+    x = np.cos(theta) * np.sin(phi) * h
+    y = np.sin(theta) * np.sin(phi) * h
+    z = np.cos(phi) * h
 
     for i in range(z.shape[0] - 1):
-        print("adding triangles for row ", i)
+        if i % 10 == 0:
+            print("adding triangles for row ", i)
         for j in range(z.shape[1] - 1):
             # Calculate indices of the corners
             upper_left = (i, j)
@@ -71,7 +71,7 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
                     (x[upper_left], z[upper_left], y[upper_left]),
                     (x[lower_left], z[lower_left], y[lower_left]),
                     (x[lower_right], z[lower_right], y[lower_right]),
-                    generate_random_color(),
+                    generate_color(h[upper_right] - 1),
                 )
 
             if (
@@ -83,5 +83,5 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
                     (x[upper_left], z[upper_left], y[upper_left]),
                     (x[lower_right], z[lower_right], y[lower_right]),
                     (x[upper_right], z[upper_right], y[upper_right]),
-                    generate_random_color(),
+                    generate_color(h[upper_right] - 1),
                 )
