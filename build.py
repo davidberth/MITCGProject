@@ -1,6 +1,11 @@
 import numpy as np
 import rasterio
 from scipy.ndimage import gaussian_filter
+import random
+
+
+def generate_random_color():
+    return [random.randint(0, 255) for _ in range(3)]
 
 
 def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
@@ -22,10 +27,11 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
     # Apply a Gaussian filter to the raster data
 
     # Normalize z
-    z = z - np.min(z)
-    z *= 3.0
+    z = (z - np.min(z)) * 0.05
+    z += 1
+    # z *= 0.1
     # make the radius of the planet 200 to min elev
-    z += 200
+    # z += 2
 
     z = gaussian_filter(z, sigma=sigma)
 
@@ -42,9 +48,9 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
     phi = r * np.pi / 2
 
     # Convert spherical coordinates to 3D coordinates
-    x = np.cos(theta) * np.sin(phi)
-    y = np.sin(theta) * np.sin(phi)
-    z = np.cos(phi) + z / z.max()
+    x = np.cos(theta) * np.sin(phi) * z
+    y = np.sin(theta) * np.sin(phi) * z
+    z = np.cos(phi) * z
 
     for i in range(z.shape[0] - 1):
         print("adding triangles for row ", i)
@@ -62,10 +68,10 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
                 and phi[i + 1, j] <= np.pi / 2
             ):
                 scene.add_triangle(
-                    (x[upper_left], y[upper_left], z[upper_left]),
-                    (x[lower_left], y[lower_left], z[lower_left]),
-                    (x[lower_right], y[lower_right], z[lower_right]),
-                    (255, 255, 255),
+                    (x[upper_left], z[upper_left], y[upper_left]),
+                    (x[lower_left], z[lower_left], y[lower_left]),
+                    (x[lower_right], z[lower_right], y[lower_right]),
+                    generate_random_color(),
                 )
 
             if (
@@ -74,8 +80,8 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
                 and phi[i, j + 1] <= np.pi / 2
             ):
                 scene.add_triangle(
-                    (x[upper_left], y[upper_left], z[upper_left]),
-                    (x[lower_right], y[lower_right], z[lower_right]),
-                    (x[upper_right], y[upper_right], z[upper_right]),
-                    (255, 255, 255),
+                    (x[upper_left], z[upper_left], y[upper_left]),
+                    (x[lower_right], z[lower_right], y[lower_right]),
+                    (x[upper_right], z[upper_right], y[upper_right]),
+                    generate_random_color(),
                 )

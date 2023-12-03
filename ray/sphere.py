@@ -1,9 +1,9 @@
 import numpy as np
-from numba import njit, f8
+from numba import njit
 
 
-@njit(f8(f8[:], f8[:], f8[:], f8), fastmath=True)
-def intersect(origin, direction, geom, t):
+@njit(fastmath=True)
+def intersect(origin, direction, geom):
     """
     Computes the intersection of a ray and a sphere.
 
