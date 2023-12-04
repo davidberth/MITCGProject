@@ -13,16 +13,19 @@ def cast_ray(
     gtypes,
     geoms,
     aabbs,
-    colors,
+    materials,
     haabbs,
     hi,
     hk,
     labs,
     labsc,
+    light_pos,
+    light_prop,
 ):
     t = 999999.0
     col = np.array((0, 0, 0), dtype=np.float32)
-
+    rnorm = np.array((0.0, 1.0, 0.0), dtype=np.float32)
+    obji = -1
     for k in range(labs.shape[0]):
         if aabb.intersect(origin, direction, labs[k, :]) > 0:
             for i in labsc[k, :]:
@@ -35,17 +38,37 @@ def cast_ray(
                         laabb = aabbs[j, :]
                         if aabb.intersect(origin, direction, laabb) > 0:
                             if gtype == 0:
-                                tp = sphere.intersect(
+                                tp, norm = sphere.intersect(
                                     origin, direction, geoms[j, :]
                                 )
                             elif gtype == 1:
-                                tp = triangle.intersect(
+                                tp, norm = triangle.intersect(
                                     origin, direction, geoms[j, :]
                                 )
                             if tp > 0 and tp < t:
                                 t = tp
-                                col = colors[j, :]
+                                rnorm = norm
+                                obji = j
 
+    if obji > -1:
+        diffuse = materials[obji, :3]
+        ambient = materials[obji, 3:6]
+        pos = origin + t * direction
+        light_dir = light_pos[0] - pos
+        light_dir /= np.sqrt(
+            light_dir[0] * light_dir[0]
+            + light_dir[1] * light_dir[1]
+            + light_dir[2] * light_dir[2]
+        )
+        ldot = (
+            rnorm[0] * light_dir[0]
+            + rnorm[1] * light_dir[1]
+            + rnorm[2] * light_dir[2]
+        )
+        if ldot < 0.0:
+            ldot = 0.0
+        # phong model
+        col = np.clip((diffuse * ldot + ambient), 0.0, 1.0).astype(np.float32)
     return col
 
 
@@ -60,12 +83,14 @@ def cast_rays(
     gtypes,
     geoms,
     aabbs,
-    colors,
+    materials,
     haabbs,
     hi,
     hk,
     labs,
     labsc,
+    light_pos,
+    light_prop,
 ):
     width, height = directions.shape[:2]
 
@@ -77,10 +102,12 @@ def cast_rays(
                 gtypes,
                 geoms,
                 aabbs,
-                colors,
+                materials,
                 haabbs,
                 hi,
                 hk,
                 labs,
                 labsc,
+                light_pos,
+                light_prop,
             )

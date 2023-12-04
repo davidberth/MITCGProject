@@ -53,16 +53,21 @@ def intersect(origin, direction, geom):
     d = b * b - 4 * a * c
 
     if d < 0:
-        return -9999.0
+        return -9999.0, np.array((0.0, 1.0, 0.0), dtype=np.float32)
     else:
         d = np.sqrt(d)
         t_plus = (-b + d) / (2 * a)
         t_minus = (-b - d) / (2 * a)
 
         if t_minus < 0:
-            return t_plus
+            t = t_plus
         else:
-            return t_minus
+            t = t_minus
+
+    loc = origin + t * direction
+    normal = (loc - center).astype(np.float32)
+    normal /= np.sqrt(normal[0] ** 2 + normal[1] ** 2 + normal[2] ** 2)
+    return t, normal
 
 
 def get_aabb(geom):

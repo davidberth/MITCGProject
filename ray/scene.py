@@ -7,23 +7,20 @@ import time
 
 
 class Scene:
-    geometry = None
-    colors = None
-
     def __init__(self):
         self.geometry = []
-        self.colors = []
+        self.materials = []
         self.gtypes = []
         self.aabbs = []
         self.light_pos = []
         self.light_prop = []
 
-        self.add_sphere((1.1, 1.1, 1.1), 0.1, (1.0, 0, 0))
-        self.add_light((1.1, 1.1, 1.1), (1.0, 0.7, 0.7))
+        self.add_sphere((1.1, 1.1, 1.1), 0.1, (1.0, 0, 0, 0.5, 0.2, 0.2))
+        self.add_light((1.1, 1.1, 1.1), (1.0, 0.7, 0.7, 0.1, 0.1, 0.1))
 
     def finalize(self):
         self.geometry = np.array(self.geometry, dtype=np.float32)
-        self.colors = np.array(self.colors, dtype=np.float32)
+        self.materials = np.array(self.materials, dtype=np.float32)
         self.gtypes = np.array(self.gtypes).astype(np.uint8)
         self.light_pos = np.array(self.light_pos).astype(np.float32)
         self.light_prop = np.array(self.light_prop).astype(np.float32)
@@ -56,7 +53,7 @@ class Scene:
         self.labsc = np.array(labsc, dtype=np.int32)
         print(" done building haabbs in", e - b)
 
-    def add_triangle(self, v1, v2, v3, n1, n2, n3, col):
+    def add_triangle(self, v1, v2, v3, n1, n2, n3, mat):
         self.gtypes.append(1)
         self.geometry.append(
             np.array(
@@ -82,9 +79,9 @@ class Scene:
                 )
             )
         )
-        self.colors.append(np.array(col).astype(np.float32))
+        self.materials.append(np.array(mat).astype(np.float32))
 
-    def add_sphere(self, center, radius, col):
+    def add_sphere(self, center, radius, mat):
         self.gtypes.append(0)
         self.geometry.append(
             np.array(
@@ -110,7 +107,7 @@ class Scene:
                 )
             )
         )
-        self.colors.append(np.array(col).astype(np.float32))
+        self.materials.append(np.array(mat).astype(np.float32))
 
     def add_light(self, pos, prop):
         self.light_pos.append(pos)

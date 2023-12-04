@@ -33,7 +33,7 @@ def cross_product(a, b):
 
 
 @njit(fastmath=True)
-def intersect(ray_origin, ray_direction, triangle_vertices):
+def intersect(ray_origin, ray_direction, geom):
     """
     Compute the intersection of a ray and a triangle.
 
@@ -46,9 +46,9 @@ def intersect(ray_origin, ray_direction, triangle_vertices):
     """
     # Unpack the triangle vertices
     v0, v1, v2 = (
-        triangle_vertices[0:3],
-        triangle_vertices[3:6],
-        triangle_vertices[6:9],
+        geom[0:3],
+        geom[3:6],
+        geom[6:9],
     )
 
     # Find vectors for two edges sharing v0
@@ -64,7 +64,7 @@ def intersect(ray_origin, ray_direction, triangle_vertices):
 
     # NOT CULLING
     if abs(det) < 1e-8:
-        return -9999.0
+        return -9999.0, np.array((0.0, 1.0, 0.0), dtype=np.float32)
 
     inv_det = 1.0 / det
 
@@ -76,7 +76,7 @@ def intersect(ray_origin, ray_direction, triangle_vertices):
 
     # The intersection lies outside of the triangle
     if u < 0 or u > 1:
-        return -9999.0
+        return -9999.0, np.array((0.0, 1.0, 0.0), dtype=np.float32)
 
     # Prepare to test v parameter
     qvec = cross_product(tvec, edge1)
@@ -86,12 +86,13 @@ def intersect(ray_origin, ray_direction, triangle_vertices):
 
     # The intersection lies outside of the triangle
     if v < 0 or u + v > 1:
-        return -9999.0
+        return -9999.0, np.array((0.0, 1.0, 0.0), dtype=np.float32)
 
     # Calculate t, ray intersects triangle
     t = dot_product(edge2, qvec) * inv_det
 
-    return t
+    # for now, return the normal of the first vertex
+    return t, geom[9:12]
 
 
 def get_aabb(geom):

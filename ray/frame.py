@@ -110,12 +110,14 @@ class Frame:
             self.scene.gtypes,
             self.scene.geometry,
             self.scene.aabbs,
-            self.scene.colors,
+            self.scene.materials,
             self.scene.haabbs,
             self.scene.haabbsi,
             self.scene.haabbsk,
             self.scene.labs,
             self.scene.labsc,
+            self.scene.light_pos,
+            self.scene.light_prop,
         )
         end = time.time()
         print("total time", end - start)

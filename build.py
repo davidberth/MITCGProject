@@ -1,13 +1,11 @@
 import numpy as np
 import rasterio
 from scipy.ndimage import gaussian_filter
+import params
 
 
 def generate_color(z):
-    red = z * 8.0
-    red = np.clip(red, 0.0, 1.0)
-    blue = 1.0 - red
-    return [red, 0.5, blue]
+    return [1.0, 1.0, 1.0, 0.02, 0.02, 0.02]
 
 
 def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
@@ -29,7 +27,7 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
     # Apply a Gaussian filter to the raster data
 
     # Normalize z
-    h = (h - np.min(h)) * 0.01
+    h = (h - np.min(h)) * params.height_scale
     h += 1
 
     h = gaussian_filter(h, sigma=sigma)
