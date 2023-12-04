@@ -4,25 +4,36 @@ from scipy.ndimage import gaussian_filter
 import params
 
 
-def generate_color(z):
-    return [1.0, 1.0, 1.0, 0.02, 0.02, 0.02]
+def generate_color(lv, materials):
+    diffuse = materials[int(lv + 0.01), :]
+    ambient = diffuse * 0.05
+    return np.array(
+        (
+            diffuse[0],
+            diffuse[1],
+            diffuse[2],
+            ambient[0],
+            ambient[1],
+            ambient[2],
+        ),
+        dtype=np.float32,
+    )
 
 
-def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
-    """
-    Converts a raster to a mesh of triangles and writes it to an .obj file.
-
-    Parameters:
-    input_raster (str): The path to the input raster file.
-    output_obj (str): The path to the output .obj file.
-    scene: our scene
-    sigma (float): The standard deviation for the Gaussian kernel. The default is 1.
-    """
-
+def raster_to_mesh(dem_raster, land_raster, use_raster, scene, sigma=1.4):
     # Open the raster file
-    with rasterio.open(input_raster) as ds:
+    with rasterio.open(dem_raster) as ds:
         # Read the raster data
         h = ds.read(1)
+    with rasterio.open(land_raster) as ds:
+        land = ds.read(1)
+    with rasterio.open(use_raster) as ds:
+        use = ds.read(1)
+
+    materials = np.genfromtxt("materials/materials.csv", delimiter=",")
+    materials = materials[:, 1:]
+
+    land[use == 55] = 24
 
     # Apply a Gaussian filter to the raster data
 
@@ -64,11 +75,13 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
             lower_left = (i + 1, j)
             lower_right = (i + 1, j + 1)
 
+            lv = land[i, j]
+
             # Only include triangles in the hemisphere
             if (
-                phi[i, j] <= np.pi / 2
-                and phi[i, j + 1] <= np.pi / 2
-                and phi[i + 1, j] <= np.pi / 2
+                phi[i, j] <= np.pi / 2 + 0.008
+                and phi[i, j + 1] <= np.pi / 2 + 0.008
+                and phi[i + 1, j] <= np.pi / 2 + 0.008
             ):
                 scene.add_triangle(
                     (x[upper_left], z[upper_left], y[upper_left]),
@@ -77,13 +90,24 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
                     (nx[upper_left], nz[upper_left], ny[upper_left]),
                     (nx[lower_left], nz[lower_left], ny[lower_left]),
                     (nx[lower_right], nz[lower_right], ny[lower_right]),
-                    generate_color(h[upper_right] - 1),
+                    generate_color(lv, materials),
+                )
+
+                # add the dark world triangle
+                scene.add_triangle(
+                    (x[upper_left], -z[upper_left], y[upper_left]),
+                    (x[lower_left], -z[lower_left], y[lower_left]),
+                    (x[lower_right], -z[lower_right], y[lower_right]),
+                    (nx[upper_left], -nz[upper_left], ny[upper_left]),
+                    (nx[lower_left], -nz[lower_left], ny[lower_left]),
+                    (nx[lower_right], -nz[lower_right], ny[lower_right]),
+                    generate_color(lv, materials),
                 )
 
             if (
-                phi[i, j] <= np.pi / 2
-                and phi[i + 1, j + 1] <= np.pi / 2
-                and phi[i, j + 1] <= np.pi / 2
+                phi[i, j] <= np.pi / 2 + 0.008
+                and phi[i + 1, j + 1] <= np.pi / 2 + 0.008
+                and phi[i, j + 1] <= np.pi / 2 + 0.008
             ):
                 scene.add_triangle(
                     (x[upper_left], z[upper_left], y[upper_left]),
@@ -92,5 +116,16 @@ def raster_to_mesh(input_raster, output_obj, scene, sigma=1):
                     (nx[upper_left], nz[upper_left], ny[upper_left]),
                     (nx[lower_right], nz[lower_right], ny[lower_right]),
                     (nx[upper_right], nz[upper_right], ny[upper_right]),
-                    generate_color(h[upper_right] - 1),
+                    generate_color(lv, materials),
+                )
+
+                # add the dark world triangle
+                scene.add_triangle(
+                    (x[upper_left], -z[upper_left], y[upper_left]),
+                    (x[lower_right], -z[lower_right], y[lower_right]),
+                    (x[upper_right], -z[upper_right], y[upper_right]),
+                    (nx[upper_left], -nz[upper_left], ny[upper_left]),
+                    (nx[lower_right], -nz[lower_right], ny[lower_right]),
+                    (nx[upper_right], -nz[upper_right], ny[upper_right]),
+                    generate_color(lv, materials),
                 )

@@ -33,66 +33,55 @@ def cross_product(a, b):
 
 
 @njit(fastmath=True)
-def intersect(ray_origin, ray_direction, geom):
-    """
-    Compute the intersection of a ray and a triangle.
-
-    :param ray_origin: The origin of the ray (numpy array)
-    :param ray_direction: The direction of the ray (numpy array)
-    :param triangle_vertices: A list of three vertices,
-    each a numpy array, representing a triangle
-    :return: The value t along the ray where it intersects the triangle
-    or None if no intersection.
-    """
-    # Unpack the triangle vertices
-    v0, v1, v2 = (
-        geom[0:3],
-        geom[3:6],
-        geom[6:9],
+def intersect(ray_origin, ray_direction, triangle_data):
+    # Extract triangle vertices and normals
+    v0, v1, v2 = triangle_data[:3], triangle_data[3:6], triangle_data[6:9]
+    n0, n1, n2 = (
+        triangle_data[9:12],
+        triangle_data[12:15],
+        triangle_data[15:18],
     )
 
-    # Find vectors for two edges sharing v0
+    # Compute edges and h
     edge1 = v1 - v0
     edge2 = v2 - v0
+    h = cross_product(ray_direction, edge2)
+    a = dot_product(edge1, h)
 
-    # Begin calculating determinant - also used to calculate u parameter
-    pvec = cross_product(ray_direction, edge2)
+    # Check if ray is parallel to the triangle
+    if abs(a) < 1e-6:
+        return -9999.0, np.array(
+            (0.0, 1.0, 0.0), dtype=np.float32
+        )  # No intersection
 
-    # If determinant is near zero, ray lies in plane of triangle or ray is
-    # parallel to plane of triangle
-    det = dot_product(edge1, pvec)
+    # Compute intersection point
+    f = 1.0 / a
+    s = ray_origin - v0
+    u = f * dot_product(s, h)
 
-    # NOT CULLING
-    if abs(det) < 1e-8:
+    if u < 0.0 or u > 1.0:
         return -9999.0, np.array((0.0, 1.0, 0.0), dtype=np.float32)
 
-    inv_det = 1.0 / det
+    q = np.cross(s, edge1)
+    v = f * dot_product(ray_direction, q)
 
-    # Calculate distance from v0 to ray origin
-    tvec = ray_origin - v0
+    if v < 0.0 or u + v > 1.0:
+        return -9999.0, np.array(
+            (0.0, 1.0, 0.0), dtype=np.float32
+        )  # No intersection
 
-    # Calculate u parameter and test bound
-    u = dot_product(tvec, pvec) * inv_det
+    # Compute intersection time 't'
+    t = f * dot_product(edge2, q)
 
-    # The intersection lies outside of the triangle
-    if u < 0 or u > 1:
-        return -9999.0, np.array((0.0, 1.0, 0.0), dtype=np.float32)
+    if t < 1e-6:
+        return -9999.0, np.array(
+            (0.0, 1.0, 0.0), dtype=np.float32
+        )  # No intersection
 
-    # Prepare to test v parameter
-    qvec = cross_product(tvec, edge1)
+    # Interpolate normal at intersection point
+    interpolated_normal = (1 - u - v) * n0 + u * n1 + v * n2
 
-    # Calculate v parameter and test bound
-    v = dot_product(ray_direction, qvec) * inv_det
-
-    # The intersection lies outside of the triangle
-    if v < 0 or u + v > 1:
-        return -9999.0, np.array((0.0, 1.0, 0.0), dtype=np.float32)
-
-    # Calculate t, ray intersects triangle
-    t = dot_product(edge2, qvec) * inv_det
-
-    # for now, return the normal of the first vertex
-    return t, geom[9:12]
+    return t, interpolated_normal.astype(np.float32)
 
 
 def get_aabb(geom):

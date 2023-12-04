@@ -126,7 +126,9 @@ class Frame:
         # now we build the triangles
         if params.collect:
             collect.process_address(address)
-        build.raster_to_mesh("work/dem.tif", "work/dem.obj", self.scene)
+        build.raster_to_mesh(
+            "work/dem.tif", "work/land.tif", "work/use.tif", self.scene
+        )
         self.scene.finalize()
 
     def write(self, file: str):

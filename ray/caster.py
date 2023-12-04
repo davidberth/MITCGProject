@@ -53,6 +53,8 @@ def cast_ray(
     if obji > -1:
         diffuse = materials[obji, :3]
         ambient = materials[obji, 3:6]
+        specular = materials[obji, :3]
+        shininess = 20.0
         pos = origin + t * direction
         light_dir = light_pos[0] - pos
         light_dir /= np.sqrt(
@@ -67,8 +69,32 @@ def cast_ray(
         )
         if ldot < 0.0:
             ldot = 0.0
+
+        # Compute reflection of the light around the normal
+        reflection = 2 * ldot * rnorm - light_dir
+        reflection /= np.sqrt(
+            reflection[0] * reflection[0]
+            + reflection[1] * reflection[1]
+            + reflection[2] * reflection[2]
+        )
+
+        # Compute view direction
+        view_dir = -direction
+        view_dir /= np.sqrt(
+            view_dir[0] * view_dir[0]
+            + view_dir[1] * view_dir[1]
+            + view_dir[2] * view_dir[2]
+        )
+        rdot = max(
+            0,
+            reflection[0] * view_dir[0]
+            + reflection[1] * view_dir[1]
+            + reflection[2] * view_dir[2],
+        )
         # phong model
-        col = np.clip((diffuse * ldot + ambient), 0.0, 1.0).astype(np.float32)
+        col = np.clip(
+            (diffuse * ldot + ambient + specular * rdot**shininess), 0.0, 1.0
+        ).astype(np.float32)
     return col
 
 

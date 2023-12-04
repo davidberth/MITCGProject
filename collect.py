@@ -13,6 +13,8 @@ def process_address(address):
     half_width = width / 2
     transformer = Transformer.from_crs("EPSG:4326", "EPSG:26919")
 
+    scale = params.scale
+
     g = geocoder.osm(address)
     lat, lon = g.latlng
     print("lat/lon center", lat, lon)
@@ -20,10 +22,10 @@ def process_address(address):
     cx, cy = transformer.transform(lat, lon)
     print("projected center", cy, cx)
 
-    ymin = cy - half_width
-    ymax = cy + half_width
-    xmin = cx - half_width
-    xmax = cx + half_width
+    ymin = cy - half_width * scale
+    ymax = cy + half_width * scale
+    xmin = cx - half_width * scale
+    xmax = cx + half_width * scale
 
     files = glob.glob("work/*")
     for f in files:
@@ -56,6 +58,8 @@ def process_address(address):
         ds,
         projWin=[xmin, ymax, xmax, ymin],
         outputType=gdal.gdalconst.GDT_Float32,
+        xRes=0.5 * scale,
+        yRes=0.5 * scale,
     )
     ds = None
 
@@ -65,4 +69,8 @@ def process_address(address):
 
     raster.shapefile_to_raster(
         "work/land.shp", "work/dem.tif", "work/land.tif", "COVERCODE"
+    )
+
+    raster.shapefile_to_raster(
+        "work/land.shp", "work/dem.tif", "work/use.tif", "USEGENCODE"
     )
