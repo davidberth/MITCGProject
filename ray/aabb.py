@@ -112,6 +112,7 @@ def build_haabbs(aabbs, nb):
     return (haabbs, haabbsi, haabbsk)
 
 
+@njit(fastmath=True)
 def build_labs(aabbs, nb, nbl):
     xmin = np.min(aabbs[:, 0])
     ymin = np.min(aabbs[:, 1])
