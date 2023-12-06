@@ -24,6 +24,7 @@ def cast_ray(
 ):
     t = 999999.0
     col = np.array((0, 0, 0), dtype=np.float32)
+    hit = 0
     rnorm = np.array((0.0, 1.0, 0.0), dtype=np.float32)
     obji = -1
     for k in range(labs.shape[0]):
@@ -51,6 +52,7 @@ def cast_ray(
                                 obji = j
 
     if obji > -1:
+        hit = 1
         diffuse = materials[obji, :3]
         ambient = materials[obji, 3:6]
         specular = materials[obji, :3]
@@ -95,7 +97,8 @@ def cast_ray(
         col = np.clip(
             (diffuse * ldot + ambient + specular * rdot**shininess), 0.0, 1.0
         ).astype(np.float32)
-    return col
+
+    return col, hit
 
 
 @njit(
@@ -106,6 +109,7 @@ def cast_rays(
     origin,
     directions,
     buffer,
+    hit,
     gtypes,
     geoms,
     aabbs,
@@ -122,7 +126,7 @@ def cast_rays(
 
     for x in prange(width):
         for y in prange(height):
-            buffer[x, y, :] = cast_ray(
+            buffer[x, y, :], hit[x, y] = cast_ray(
                 origin,
                 directions[x, y, :],
                 gtypes,

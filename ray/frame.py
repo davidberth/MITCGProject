@@ -38,6 +38,7 @@ class Frame:
         self.half_height = height / 2
 
         self.frame = np.zeros((height, width, 3), np.float32)
+        self.hit = np.zeros((height, width), np.float32)
 
         # x, y, z
         self.camera_pos = np.array(params.camera_pos)
@@ -107,6 +108,7 @@ class Frame:
             self.camera_pos.astype(np.float32),
             directions,
             self.frame,
+            self.hit,
             self.scene.gtypes,
             self.scene.geometry,
             self.scene.aabbs,
@@ -121,6 +123,14 @@ class Frame:
         )
         end = time.time()
         print("total time", end - start)
+
+    def add_background(self):
+        # add the background sky
+        background = build.create_background()
+        mask = self.hit < 0.5
+        self.frame[mask, 0] = background[mask]
+        self.frame[mask, 1] = background[mask]
+        self.frame[mask, 2] = background[mask]
 
     def build_scene(self, address):
         # now we build the triangles

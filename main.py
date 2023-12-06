@@ -8,6 +8,7 @@ frame.build_scene(sys.argv[1])
 print("rendering scene")
 print("number of geometries ", len(frame.scene.geometry))
 frame.cast_rays()
+frame.add_background()
 print(" done")
 
 frame.write("test.png")
