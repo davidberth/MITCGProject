@@ -125,14 +125,15 @@ class Frame:
         print("total time", end - start)
 
     def add_background(self):
-        # add the background sky
-        background = build.create_background()
         mask = self.hit < 0.5
-        self.frame[mask, 0] = background[mask]
-        self.frame[mask, 1] = background[mask]
-        self.frame[mask, 2] = background[mask]
+        self.frame[mask, 0] = self.background[mask] * 2.0
+        self.frame[mask, 1] = self.background[mask] * 2.0
+        self.frame[mask, 2] = self.background[mask] * 2.0
+        self.frame[~mask, :] *= 1.05
 
     def build_scene(self, address):
+        # create the noise background
+        self.background = build.create_background()
         # now we build the triangles
         if params.collect:
             collect.process_address(address)
@@ -142,11 +143,14 @@ class Frame:
             "work/use.tif",
             "work/buildings.shp",
             self.scene,
+            self.background,
         )
         self.scene.finalize()
 
     def write(self, file: str):
         self.frame = self.frame[::-1, :, :] * 255.0
+        self.frame = np.clip(self.frame, 0.0, 255.0)
+
         self.frame = self.frame.astype(np.uint8)
         img = Image.fromarray(self.frame, "RGB")
         img.save(file, "PNG")

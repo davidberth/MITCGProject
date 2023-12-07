@@ -15,7 +15,7 @@ class Scene:
         self.light_pos = []
         self.light_prop = []
 
-        self.add_light((1.0, 1.0, -1.0), (100, 1.0, 1.0, 0.5))
+        self.add_light((1000.0, 1000.0, -1000.0), (100, 1.0, 1.0, 0.5))
 
     def finalize(self):
         self.geometry = np.array(self.geometry, dtype=np.float32)
@@ -78,6 +78,8 @@ class Scene:
                 )
             )
         )
+        # print("triangle", n1, mat)
+
         self.materials.append(np.array(mat).astype(np.float32))
 
     def add_sphere(self, center, radius, mat):

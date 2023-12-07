@@ -1,0 +1,7 @@
+\contentsline {section}{\tocsection {}{1}{Project Summary}}{1}{section.1}%
+\contentsline {section}{\tocsection {}{2}{Progress Made}}{1}{section.2}%
+\contentsline {section}{\tocsection {}{3}{Challenges Faced and Next Steps}}{2}{section.3}%
+\contentsline {section}{\tocsection {}{4}{GitHub Repository}}{2}{section.4}%
+\contentsline {section}{\tocsection {}{5}{Screenshots of Current Progress}}{3}{section.5}%
+\contentsline {section}{\tocsection {}{6}{Land Cover Types Implemented}}{6}{section.6}%
+\contentsline {section}{\tocsection {}{7}{References}}{6}{section.7}%

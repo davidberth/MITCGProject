@@ -7,26 +7,30 @@ import noise
 import trimesh
 
 
-def generate_color(lv, materials):
-    diffuse = materials[int(lv + 0.01), :]
-    ambient = diffuse * 0.05
+def generate_color(lv, materials, background, idx):
+    diffuse = materials[int(lv + 0.01), :3]
+    ns = materials[int(lv + 0.01), 4] * 20.0
+    nv = background[idx[0], idx[1]]
+    nc = 1 + nv * ns * 3.0 - nv * ns * 1.5 - 0.2
+    ambient = diffuse * 0.02
     return np.array(
         (
-            diffuse[0],
-            diffuse[1],
-            diffuse[2],
-            ambient[0],
-            ambient[1],
-            ambient[2],
+            diffuse[0] * nc,
+            diffuse[1] * nc,
+            diffuse[2] * nc,
+            ambient[0] * nc,
+            ambient[1] * nc,
+            ambient[2] * nc,
         ),
         dtype=np.float32,
     )
 
 
 def generate_building_color():
-    rv = np.random.rand() / 5.0 + 0.3
-    col = [rv, rv + 0.1, rv - 0.1]
-    return col
+    rv = np.random.rand() / 5.0 + 0.1
+    col = [rv + 0.05, rv, rv]
+    return np.array(col)
+    # return [0.9, 0.9, 0.9]
 
 
 def create_background():
@@ -45,8 +49,8 @@ def create_background():
                 octaves=octaves,
                 persistence=persistence,
                 lacunarity=lacunarity,
-                repeatx=1024,
-                repeaty=1024,
+                repeatx=params.window_width,
+                repeaty=params.window_height,
                 base=0,
             )
     print(" done")
@@ -55,7 +59,13 @@ def create_background():
 
 
 def geo_to_mesh(
-    dem_raster, land_raster, use_raster, buildings, scene, sigma=1.4
+    dem_raster,
+    land_raster,
+    use_raster,
+    buildings,
+    scene,
+    background,
+    sigma=0.5,
 ):
     with rasterio.open(land_raster) as ds:
         land = ds.read(1)
@@ -80,6 +90,21 @@ def geo_to_mesh(
     h += 1
 
     h = gaussian_filter(h, sigma=sigma)
+    land = np.clip(land, 0, 25)
+    ha = materials[land.astype(np.int32), 4]
+
+    h = h + ha * params.materials_height_adjust
+
+    sc = 15
+    indices_y = (
+        np.arange(0, h.shape[0] * sc, sc) % background.shape[1]
+    ).astype(np.int32)
+    indices_x = (
+        np.arange(0, h.shape[1] * sc, sc) % background.shape[0]
+    ).astype(np.int32)
+    indices = np.ix_(indices_x, indices_y)
+    hba = background[indices]
+    h = h + hba * 0.2
 
     # Create 2D arrays of x and y coordinates
     y, x = np.mgrid[: h.shape[0], : h.shape[1]]
@@ -128,7 +153,7 @@ def geo_to_mesh(
                     (nx[upper_left], nz[upper_left], ny[upper_left]),
                     (nx[lower_left], nz[lower_left], ny[lower_left]),
                     (nx[lower_right], nz[lower_right], ny[lower_right]),
-                    generate_color(lv, materials),
+                    generate_color(lv, materials, hba, lower_left),
                 )
 
                 # add the dark world triangle
@@ -139,7 +164,7 @@ def geo_to_mesh(
                     (nx[upper_left], -nz[upper_left], ny[upper_left]),
                     (nx[lower_left], -nz[lower_left], ny[lower_left]),
                     (nx[lower_right], -nz[lower_right], ny[lower_right]),
-                    generate_color(lv, materials),
+                    generate_color(lv, materials, hba, lower_left),
                 )
 
             if (
@@ -154,7 +179,7 @@ def geo_to_mesh(
                     (nx[upper_left], nz[upper_left], ny[upper_left]),
                     (nx[lower_right], nz[lower_right], ny[lower_right]),
                     (nx[upper_right], nz[upper_right], ny[upper_right]),
-                    generate_color(lv, materials),
+                    generate_color(lv, materials, hba, lower_left),
                 )
 
                 # add the dark world triangle
@@ -165,11 +190,43 @@ def geo_to_mesh(
                     (nx[upper_left], -nz[upper_left], ny[upper_left]),
                     (nx[lower_right], -nz[lower_right], ny[lower_right]),
                     (nx[upper_right], -nz[upper_right], ny[upper_right]),
-                    generate_color(lv, materials),
+                    generate_color(lv, materials, hba, lower_left),
                 )
+
+    # place trees
+    for i in range(h.shape[0]):
+        for j in range(h.shape[1]):
+            if land[i, j] == 9 or land[i, j] == 10:
+                if np.random.rand() > 0.75:
+                    ty = 2 * (i / h.shape[1]) - 1
+                    tx = 2 * (j / h.shape[0]) - 1
+                    tz = h[i, j] + 0.025 + np.random.random() * 0.01
+                    # Convert x and y to spherical coordinates
+                    r = np.sqrt(tx**2 + ty**2)
+                    theta = np.arctan2(ty, tx)
+                    phi = r * np.pi / 2
+
+                    if phi < np.pi / 2 - 0.01:
+                        # Convert spherical coordinates to 3D coordinates
+                        tx = np.cos(theta) * np.sin(phi) * tz
+                        ty = np.sin(theta) * np.sin(phi) * tz
+                        tz = np.cos(phi) * tz
+                        print("adding tree", tx, ty, tz)
+                        rad = np.random.rand() * 0.0030 + 0.0012
+                        scene.add_sphere(
+                            (tx, tz, ty),
+                            rad,
+                            (0.0, 0.3, 0.0, 0.0, 0.01, 0.0),
+                        )
+                        scene.add_sphere(
+                            (tx, -tz, ty),
+                            rad,
+                            (0.0, 0.3, 0.0, 0.0, 0.01, 0.0),
+                        )
 
     # create the building geometries
     bds = gpd.read_file(buildings)
+    bds = bds.explode()
     # bds["geometry"] = bds["geometry"].centroid
     for i, row in bds.iterrows():
         # get the coordinates of the building
@@ -201,13 +258,13 @@ def geo_to_mesh(
             x = []
 
             for i in range(len(coords[0])):
-                lx, ly = itransform * (coords[0][i], coords[1][i])
+                ly, lx = itransform * (coords[0][i], coords[1][i])
                 if lx >= 0 and lx < h.shape[1] and ly >= 0 and ly < h.shape[0]:
                     y.append(ly)
                     x.append(lx)
 
             if len(y) > 3:
-                print("placing building at ", y[0], x[0])
+                # print("placing building at ", y[0], x[0])
 
                 y = np.array(y, dtype=np.float32)
                 x = np.array(x, dtype=np.float32)
@@ -219,37 +276,90 @@ def geo_to_mesh(
                     poly[0], b_height
                 )
 
-                for triangle in extruded_polygon.triangles:
-                    y = triangle[:, 0]
-                    x = triangle[:, 1]
-                    j = triangle[:, 2] + base_height
+                # convert the vertices of the mesh to our spherical coordinates
+                x = extruded_polygon.vertices[:, 0]
+                y = extruded_polygon.vertices[:, 1]
+                z = extruded_polygon.vertices[:, 2] + base_height
 
-                    # Normalize x and y coordinates to [-1, 1]
-                    gx = 2 * (x / h.shape[1]) - 1
-                    gy = 2 * (y / h.shape[0]) - 1
+                gx = 2 * (x / h.shape[1]) - 1
+                gy = 2 * (y / h.shape[0]) - 1
 
-                    # Convert x and y to spherical coordinates
-                    r = np.sqrt(gx**2 + gy**2)
-                    theta = np.arctan2(gy, gx)
-                    phi = r * np.pi / 2
+                # Convert x and y to spherical coordinates
+                r = np.sqrt(gx**2 + gy**2)
+                theta = np.arctan2(gy, gx)
+                phi = r * np.pi / 2
 
-                    gx = np.cos(theta) * np.sin(phi) * j
-                    gy = np.sin(theta) * np.sin(phi) * j
-                    gz = np.cos(phi) * j
+                gx = np.cos(theta) * np.sin(phi) * z
+                gz = np.sin(theta) * np.sin(phi) * z
+                gy = np.cos(phi) * z
+
+                verts = []
+                faces = extruded_polygon.faces
+                for bx, by, bz in zip(gx, gy, gz):
+                    verts.append((bx, by, bz))
+                mesh = trimesh.Trimesh(vertices=verts, faces=faces)
+                # trimesh.repair.fix_winding(mesh)
+                # mesh.fix_normals()
+
+                # build top detection
+                tops = []
+                for tri in extruded_polygon.triangles:
+                    zs = tri[:, 2]
+                    if np.all(zs > 0.001):
+                        is_top = True
+                    else:
+                        is_top = False
+                    tops.append(is_top)
+
+                if np.sum(tops) < 0.5:
+                    print("BAAAAAAAAAAD")
+
+                for triangle, top in zip(mesh.triangles, tops):
+                    x = triangle[:, 0]
+                    y = triangle[:, 1]
+                    z = triangle[:, 2]
+
+                    if top:
+                        ln = np.sqrt(x[0] ** 2 + y[0] ** 2 + z[0] ** 2)
+                        norm = np.array((x[0] / ln, y[0] / ln, z[0] / ln))
+                        col = b_color
+                    else:
+                        # norm = np.array((0.0, 0.0, 0.0))
+                        col = b_color / 3.0
+                        norm = np.array((0.0, 0.0, 0.0))
+                    col2 = np.array((col[2], col[1], col[0])) * 0.7
 
                     scene.add_triangle(
-                        (gx[0], gz[0], gy[0]),
-                        (gx[1], gz[1], gy[1]),
-                        (gx[2], gz[2], gy[2]),
-                        (1, 0, 0),
-                        (1, 0, 0),
-                        (1, 0, 0),
+                        (x[0], y[0], z[0]),
+                        (x[1], y[1], z[1]),
+                        (x[2], y[2], z[2]),
+                        norm,
+                        norm,
+                        norm,
                         (
-                            b_color[0],
-                            b_color[1],
-                            b_color[2],
-                            b_color[0] / 10.0,
-                            b_color[1] / 10.0,
-                            b_color[2] / 10.0,
+                            col[0],
+                            col[1],
+                            col[2],
+                            col[0] / 12.0,
+                            col[1] / 12.0,
+                            col[2] / 12.0,
+                        ),
+                    )
+
+                    # add the dark side
+                    scene.add_triangle(
+                        (x[0], -y[0], z[0]),
+                        (x[1], -y[1], z[1]),
+                        (x[2], -y[2], z[2]),
+                        norm,
+                        norm,
+                        norm,
+                        (
+                            col2[0],
+                            col2[1],
+                            col2[2],
+                            col2[0] / 12.0,
+                            col2[1] / 12.0,
+                            col2[2] / 12.0,
                         ),
                     )
