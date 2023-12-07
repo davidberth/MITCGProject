@@ -15,7 +15,7 @@ class Scene:
         self.light_pos = []
         self.light_prop = []
 
-        self.add_light((1000.0, 1000.0, 0.0), (100, 1.0, 1.0, 0.5))
+        self.add_light((1000.0, 1000.0, -200.0), (100, 1.0, 1.0, 0.5))
 
     def finalize(self):
         self.geometry = np.array(self.geometry, dtype=np.float32)

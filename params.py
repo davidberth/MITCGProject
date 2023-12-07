@@ -1,6 +1,6 @@
 width = 200
-window_width = 1000
-window_height = 1000
+window_width = 2500
+window_height = 2500
 
 camera_pos = [0.0, 0.0, -3.1]
 camera_look = [0.0, 0.0, 0.0]
@@ -14,5 +14,7 @@ height_scale = 0.005
 scale = 10
 background_scale = 0.03
 materials_height_adjust = 0.01
+
+num_asteroids = 4000
 
 do_jit = False

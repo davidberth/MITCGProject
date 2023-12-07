@@ -1,9 +1,6 @@
 from ray.frame import Frame
 import params
 import sys
-from numba import jit, config
-
-config.DISABLE_JIT = params.do_jit
 
 frame = Frame(params.window_width, params.window_height)
 frame.build_scene(sys.argv[1])

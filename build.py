@@ -81,7 +81,12 @@ def geo_to_mesh(
     transform = ds.transform
     itransform = ~transform
 
-    materials = np.genfromtxt("materials/materials.csv", delimiter=",")
+    materials = np.genfromtxt(
+        "materials/materials.csv",
+        delimiter=",",
+        skip_header=1,
+        usecols=(1, 2, 3, 4, 5, 6, 7, 8),
+    )
     materials = materials[:, 1:]
 
     land[use == 55] = 24
@@ -197,10 +202,14 @@ def geo_to_mesh(
     # place trees
     for i in range(h.shape[0]):
         for j in range(h.shape[1]):
-            if land[i, j] == 9 or land[i, j] == 10:
-                if np.random.rand() > 0.75:
-                    ty = 2 * (i / h.shape[1]) - 1
-                    tx = 2 * (j / h.shape[0]) - 1
+            lv = land[i, j]
+            if materials[lv, 5] > 0.0:
+                if np.random.rand() > 1 - materials[lv, 5]:
+                    tree_type = materials[lv, 6]
+                    xa = np.random.rand() / float(h.shape[0])
+                    ya = np.random.rand() / float(h.shape[1])
+                    ty = 2 * (i / h.shape[1]) - 1 + xa
+                    tx = 2 * (j / h.shape[0]) - 1 + ya
                     tz = h[i, j] + 0.025 + np.random.random() * 0.01
                     # Convert x and y to spherical coordinates
                     r = np.sqrt(tx**2 + ty**2)
@@ -213,16 +222,25 @@ def geo_to_mesh(
                         ty = np.sin(theta) * np.sin(phi) * tz
                         tz = np.cos(phi) * tz
                         # print("adding tree", tx, ty, tz)
-                        rad = np.random.rand() * 0.0030 + 0.0012
+                        if tree_type < 2:
+                            rad = np.random.rand() * 0.003 + 0.0012
+                            cr = np.random.rand() * 0.1 + 0.0
+                            cg = np.random.rand() * 0.1 + 0.4
+                            cb = np.random.rand() * 0.1 + 0.0
+                        else:
+                            rad = np.random.rand() * 0.002 + 0.001
+                            cr = np.random.rand() * 0.1 + 0.0
+                            cg = np.random.rand() * 0.1 + 0.2
+                            cb = np.random.rand() * 0.1 + 0.0
                         scene.add_sphere(
                             (tx, tz, ty),
                             rad,
-                            (0.0, 0.3, 0.0, 0.0, 0.01, 0.0),
+                            (cr, cg, cb, 0.0, 0.01, 0.0),
                         )
                         scene.add_sphere(
                             (tx, -tz, ty),
                             rad,
-                            (0.0, 0.3, 0.0, 0.0, 0.01, 0.0),
+                            (cr, cg, cb, 0.0, 0.01, 0.0),
                         )
 
     # create the building geometries
@@ -364,3 +382,30 @@ def geo_to_mesh(
                             0.01,
                         ),
                     )
+
+    # create the asteroid ring
+    print("generating asteroid ring")
+    for i in range(params.num_asteroids):
+        a = np.random.rand() * 2 * np.pi
+        y = np.random.randn() * 0.05
+        rad = 1.3 + np.random.randn() * 0.1
+        siz = 0.004 + np.random.randn() * 0.0025
+
+        col = np.random.rand() * 0.3 + 0.1
+        col = np.array((col, col, col), dtype=np.float32)
+
+        sx = np.cos(a) * rad
+        sz = np.sin(a) * rad
+
+        scene.add_sphere(
+            (sx, y, sz),
+            siz,
+            (
+                col[0],
+                col[1],
+                col[2],
+                col[0] / 10.0,
+                col[1] / 10.0,
+                col[2] / 10.0,
+            ),
+        )
