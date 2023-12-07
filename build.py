@@ -110,7 +110,7 @@ def geo_to_mesh(
     ).astype(np.int32)
     indices = np.ix_(indices_x, indices_y)
     hba = background[indices]
-    h = h + hba * 0.2
+    h = h + hba * 0.08
 
     # Create 2D arrays of x and y coordinates
     y, x = np.mgrid[: h.shape[0], : h.shape[1]]
