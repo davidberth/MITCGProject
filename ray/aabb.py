@@ -25,7 +25,7 @@ def intersect(ray_origin, ray_direction, aabb):
         if abs(ray_direction[i]) < epsilon:
             # Ray is parallel to the slab. No hit if origin not within slab
             if ray_origin[i] < aabb[i] or ray_origin[i] > aabb[i + 3]:
-                return -9999
+                return -99999.0
         else:
             # Compute intersection t value of ray with near and far plane of slab
             t1 = (aabb[i] - ray_origin[i]) / ray_direction[i]
@@ -43,13 +43,16 @@ def intersect(ray_origin, ray_direction, aabb):
 
             # Exit with no collision as soon as slab intersection becomes empty
             if t_min > t_max:
-                return -9999
+                return -99999.0
 
     # If t_min is less than zero, the intersection is behind the ray's origin
-    if t_min < 0:
-        return -9999
+    if t_min < 0 and t_max < 0:
+        return -99999.0
 
-    return t_min
+    if t_min < 0:
+        return t_max
+    else:
+        return t_min
 
 
 @njit

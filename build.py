@@ -8,7 +8,7 @@ import trimesh
 
 
 def generate_color(lv, materials, background, idx):
-    diffuse = materials[int(lv + 0.01), :3]
+    """diffuse = materials[int(lv + 0.01), :3]
     ns = materials[int(lv + 0.01), 4] * 20.0
     nv = background[idx[0], idx[1]]
     nc = 1 + nv * ns * 3.0 - nv * ns * 1.5 - 0.2
@@ -23,14 +23,15 @@ def generate_color(lv, materials, background, idx):
             ambient[2] * nc,
         ),
         dtype=np.float32,
-    )
+    )"""
+    return np.array((0.5, 0.5, 0.5, 0.2, 0.2, 0.2))
 
 
 def generate_building_color():
-    rv = np.random.rand() / 5.0 + 0.1
-    col = [rv + 0.05, rv, rv]
+    rv = np.random.rand() / 5.0 + 0.5
+    col = [rv + 0.07, rv, rv]
     return np.array(col)
-    # return [0.9, 0.9, 0.9]
+    # return np.array([0.7, 0.7, 0.7])
 
 
 def create_background():
@@ -194,7 +195,7 @@ def geo_to_mesh(
                 )
 
     # place trees
-    for i in range(h.shape[0]):
+    """for i in range(h.shape[0]):
         for j in range(h.shape[1]):
             if land[i, j] == 9 or land[i, j] == 10:
                 if np.random.rand() > 0.75:
@@ -211,7 +212,7 @@ def geo_to_mesh(
                         tx = np.cos(theta) * np.sin(phi) * tz
                         ty = np.sin(theta) * np.sin(phi) * tz
                         tz = np.cos(phi) * tz
-                        print("adding tree", tx, ty, tz)
+                        # print("adding tree", tx, ty, tz)
                         rad = np.random.rand() * 0.0030 + 0.0012
                         scene.add_sphere(
                             (tx, tz, ty),
@@ -222,11 +223,11 @@ def geo_to_mesh(
                             (tx, -tz, ty),
                             rad,
                             (0.0, 0.3, 0.0, 0.0, 0.01, 0.0),
-                        )
+                        )"""
 
     # create the building geometries
     bds = gpd.read_file(buildings)
-    bds = bds.explode()
+    bds = bds.explode(index_parts=True)
     # bds["geometry"] = bds["geometry"].centroid
     for i, row in bds.iterrows():
         # get the coordinates of the building
@@ -311,55 +312,57 @@ def geo_to_mesh(
                         is_top = False
                     tops.append(is_top)
 
-                if np.sum(tops) < 0.5:
-                    print("BAAAAAAAAAAD")
-
-                for triangle, top in zip(mesh.triangles, tops):
+                for triangle, top, norm in zip(
+                    mesh.triangles, tops, mesh.face_normals
+                ):
+                    bnorm = -norm.copy()
                     x = triangle[:, 0]
                     y = triangle[:, 1]
                     z = triangle[:, 2]
 
                     if top:
-                        ln = np.sqrt(x[0] ** 2 + y[0] ** 2 + z[0] ** 2)
-                        norm = np.array((x[0] / ln, y[0] / ln, z[0] / ln))
+                        #    ln = np.sqrt(x[0] ** 2 + y[0] ** 2 + z[0] ** 2)
+                        #    norm = np.array((x[0] / ln, y[0] / ln, z[0] / ln))
                         col = b_color
                     else:
                         # norm = np.array((0.0, 0.0, 0.0))
-                        col = b_color / 3.0
-                        norm = np.array((0.0, 0.0, 0.0))
-                    col2 = np.array((col[2], col[1], col[0])) * 0.7
+                        col = b_color * 0.9
+                    #    norm = np.array((0.0, 0.0, 0.0))
+                    col2 = np.array((col[2], col[1], col[0]))
 
                     scene.add_triangle(
                         (x[0], y[0], z[0]),
                         (x[1], y[1], z[1]),
                         (x[2], y[2], z[2]),
-                        norm,
-                        norm,
-                        norm,
+                        bnorm,
+                        bnorm,
+                        bnorm,
                         (
                             col[0],
                             col[1],
                             col[2],
-                            col[0] / 12.0,
-                            col[1] / 12.0,
-                            col[2] / 12.0,
+                            0.01,
+                            0.01,
+                            0.01,
                         ),
                     )
+
+                    bnorm[1] = -bnorm[1]
 
                     # add the dark side
                     scene.add_triangle(
                         (x[0], -y[0], z[0]),
                         (x[1], -y[1], z[1]),
                         (x[2], -y[2], z[2]),
-                        norm,
-                        norm,
-                        norm,
+                        bnorm,
+                        bnorm,
+                        bnorm,
                         (
                             col2[0],
                             col2[1],
                             col2[2],
-                            col2[0] / 12.0,
-                            col2[1] / 12.0,
-                            col2[2] / 12.0,
+                            0.01,
+                            0.01,
+                            0.01,
                         ),
                     )
