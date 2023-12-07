@@ -1,8 +1,8 @@
 data/*
 qgis/*
-Ray.egg-info/*
-ray/__pycache__/*
-__pychache__/*
+Ray.egg-info/
+ray/__pycache__/
+__pychache__/
 work/
 
 

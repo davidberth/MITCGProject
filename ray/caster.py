@@ -6,7 +6,7 @@ from ray import triangle
 from ray import aabb
 
 
-# @njit(fastmath=True)
+@njit(fastmath=True)
 def cast_shadow(
     origin, direction, gtypes, geoms, aabbs, haabbs, hi, hk, labs, labsc
 ):
@@ -38,7 +38,7 @@ def cast_shadow(
     return obji
 
 
-# @njit(fastmath=True)
+@njit(fastmath=True)
 def cast_ray(
     origin,
     direction,
@@ -141,15 +141,15 @@ def cast_ray(
             ).astype(np.float32)
 
         else:
-            col = np.array((0.0, 0.0, 0.0), dtype=np.float32)
+            col = ambient
 
     return col, hit
 
 
-# @njit(
-#    fastmath=True,
-#    parallel=True,
-# )
+@njit(
+    fastmath=True,
+    parallel=True,
+)
 def cast_rays(
     origin,
     directions,

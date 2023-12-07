@@ -8,11 +8,11 @@ import trimesh
 
 
 def generate_color(lv, materials, background, idx):
-    """diffuse = materials[int(lv + 0.01), :3]
+    diffuse = materials[int(lv + 0.01), :3]
     ns = materials[int(lv + 0.01), 4] * 20.0
     nv = background[idx[0], idx[1]]
     nc = 1 + nv * ns * 3.0 - nv * ns * 1.5 - 0.2
-    ambient = diffuse * 0.02
+    ambient = diffuse * 0.08
     return np.array(
         (
             diffuse[0] * nc,
@@ -23,15 +23,15 @@ def generate_color(lv, materials, background, idx):
             ambient[2] * nc,
         ),
         dtype=np.float32,
-    )"""
-    return np.array((0.5, 0.5, 0.5, 0.2, 0.2, 0.2))
+    )
+    # return np.array((0.5, 0.5, 0.5, 0.2, 0.2, 0.2))
 
 
 def generate_building_color():
-    rv = np.random.rand() / 5.0 + 0.5
-    col = [rv + 0.07, rv, rv]
-    return np.array(col)
-    # return np.array([0.7, 0.7, 0.7])
+    rr = np.random.rand() / 5.0 + 0.58
+    rb = np.random.rand() / 5.0 + 0.5
+    rg = np.random.rand() / 5.0 + 0.5
+    return np.array([rr, rb, rg])
 
 
 def create_background():
@@ -195,7 +195,7 @@ def geo_to_mesh(
                 )
 
     # place trees
-    """for i in range(h.shape[0]):
+    for i in range(h.shape[0]):
         for j in range(h.shape[1]):
             if land[i, j] == 9 or land[i, j] == 10:
                 if np.random.rand() > 0.75:
@@ -223,7 +223,7 @@ def geo_to_mesh(
                             (tx, -tz, ty),
                             rad,
                             (0.0, 0.3, 0.0, 0.0, 0.01, 0.0),
-                        )"""
+                        )
 
     # create the building geometries
     bds = gpd.read_file(buildings)
@@ -299,8 +299,6 @@ def geo_to_mesh(
                 for bx, by, bz in zip(gx, gy, gz):
                     verts.append((bx, by, bz))
                 mesh = trimesh.Trimesh(vertices=verts, faces=faces)
-                # trimesh.repair.fix_winding(mesh)
-                # mesh.fix_normals()
 
                 # build top detection
                 tops = []
