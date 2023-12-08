@@ -62,7 +62,7 @@ def create_background():
 def raster_to_sphere(i, j, offset, h):
     ty = 2 * (i / h.shape[1]) - 1
     tx = 2 * (j / h.shape[0]) - 1
-    ht = h[j, i] + offset
+    ht = h[i, j] + offset
     # Convert x and y to spherical coordinates
     r = np.sqrt(tx**2 + ty**2)
     theta = np.arctan2(ty, tx)
@@ -222,7 +222,7 @@ def geo_to_mesh(
         for j in range(h.shape[1]):
             lv = land[i, j]
             if materials[lv, 5] > 0.0:
-                if np.random.rand() > 1 - materials[lv, 5]:
+                if np.random.rand() > (1 - materials[lv, 5]) * 1.5:
                     tree_type = materials[lv, 6]
                     xa = np.random.rand() / float(h.shape[0])
                     ya = np.random.rand() / float(h.shape[1])
@@ -243,15 +243,15 @@ def geo_to_mesh(
                         if ty < params.z_lim:
                             # print("adding tree", tx, ty, tz)
                             if tree_type < 2:
-                                rad = np.random.rand() * 0.004 + 0.0024
-                                cr = np.random.rand() * 0.1 + 0.0
-                                cg = np.random.rand() * 0.1 + 0.4
-                                cb = np.random.rand() * 0.1 + 0.0
+                                rad = np.random.rand() * 0.003 + 0.0014
+                                cr = np.random.rand() * 0.2 + 0.0
+                                cg = np.random.rand() * 0.2 + 0.4
+                                cb = np.random.rand() * 0.2 + 0.0
                             else:
-                                rad = np.random.rand() * 0.004 + 0.002
-                                cr = np.random.rand() * 0.1 + 0.0
-                                cg = np.random.rand() * 0.1 + 0.2
-                                cb = np.random.rand() * 0.1 + 0.0
+                                rad = np.random.rand() * 0.003 + 0.001
+                                cr = np.random.rand() * 0.2 + 0.0
+                                cg = np.random.rand() * 0.2 + 0.2
+                                cb = np.random.rand() * 0.2 + 0.0
                             scene.add_sphere(
                                 (tx, tz, ty),
                                 rad,
@@ -438,12 +438,15 @@ def geo_to_mesh(
     for i in range(h.shape[0]):
         for j in range(h.shape[1]):
             if land[i, j] == 24:
-                if np.random.rand() > 0.8:
+                if np.random.rand() > 0.3:
                     tx, ty, tz, upper = raster_to_sphere(i, j, 0.039, h)
-                    if not upper:
-                        scene.add_light((tx, ty, tz), [0.1, 1.0, 0.2, 0.0])
+                    if upper:
+                        # scene.add_light((tx, -ty, tz), [0.05, 0.1, 0.1, 0.1])
                         tx, ty, tz, upper = raster_to_sphere(i, j, 0.029, h)
-                        print("adding street light at ", tx, ty, tz)
+                        print("adding street light at ", tx, -ty, tz)
+                        intens = np.clip(ty, 0.0, 1.0)
                         scene.add_sphere(
-                            (tx, ty, tz), 0.002, (0.1, 0.0, 0.0, 1.0, 0.0, 0.0)
+                            (tx, -ty, tz),
+                            0.002,
+                            (0.0, 0.0, 0.0, intens, intens, intens),
                         )

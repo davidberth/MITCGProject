@@ -1,6 +1,6 @@
-width = 100
-window_width = 1000
-window_height = 1000
+width = 250
+window_width = 3000
+window_height = 3000
 
 camera_pos = [0.0, 0.0, -3.1]
 camera_look = [0.0, 0.0, 0.0]
@@ -11,7 +11,7 @@ num_hals = 5
 collect = True
 
 height_scale = 0.005
-scale = 20
+scale = 8
 background_scale = 0.03
 materials_height_adjust = 0.01
 

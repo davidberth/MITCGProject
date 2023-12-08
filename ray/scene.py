@@ -21,7 +21,7 @@ class Scene:
             poz = np.random.randn() * 60.0
 
             self.add_light(
-                (100 + pox, 1000.0 + poy, -200.0 + poz),
+                (pox, 1000.0 + poy, -250.0 + poz),
                 [
                     10000.0,
                     1.0 / float(params.num_suns),

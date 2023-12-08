@@ -103,6 +103,7 @@ def cast_ray(
 
             if lsquared < light_prop[li, 4]:
                 light_dir /= np.sqrt(lsquared)
+                light_intens = 1.0 - lsquared / light_prop[li, 4]
 
                 posa = pos + 0.0001 * light_dir
                 # let's find out if we are in shadow
@@ -153,6 +154,7 @@ def cast_ray(
                     # phong model
                     col = col + (
                         lcolor
+                        * light_intens
                         * (diffuse * ldot + specular * (rdot**shininess))
                     ).astype(np.float32)
 
@@ -182,8 +184,9 @@ def cast_rays(
 ):
     width, height = directions.shape[:2]
 
-    for x in prange(width):
-        for y in prange(height):
+    for y in prange(height):
+        print("processing row", y + 1, "of", height)
+        for x in prange(width):
             buffer[x, y, :], hit[x, y] = cast_ray(
                 origin,
                 directions[x, y, :],
