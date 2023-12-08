@@ -222,7 +222,7 @@ def geo_to_mesh(
         for j in range(h.shape[1]):
             lv = land[i, j]
             if materials[lv, 5] > 0.0:
-                if np.random.rand() > (1 - materials[lv, 5]) * 1.5:
+                if np.random.rand() > (1 - materials[lv, 5]) * 1.8:
                     tree_type = materials[lv, 6]
                     xa = np.random.rand() / float(h.shape[0])
                     ya = np.random.rand() / float(h.shape[1])
@@ -438,7 +438,7 @@ def geo_to_mesh(
     for i in range(h.shape[0]):
         for j in range(h.shape[1]):
             if land[i, j] == 24:
-                if np.random.rand() > 0.3:
+                if np.random.rand() > 0.9:
                     tx, ty, tz, upper = raster_to_sphere(i, j, 0.039, h)
                     if upper:
                         # scene.add_light((tx, -ty, tz), [0.05, 0.1, 0.1, 0.1])

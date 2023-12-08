@@ -185,7 +185,7 @@ def cast_rays(
     width, height = directions.shape[:2]
 
     for y in prange(height):
-        print("processing row", y + 1, "of", height)
+        print("processed", y + 1, "of", height)
         for x in prange(width):
             buffer[x, y, :], hit[x, y] = cast_ray(
                 origin,
