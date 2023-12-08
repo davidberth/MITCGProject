@@ -126,10 +126,10 @@ class Frame:
 
     def add_background(self):
         mask = self.hit < 0.5
-        self.frame[mask, 0] = self.background[mask] * 2.0
-        self.frame[mask, 1] = self.background[mask] * 2.0
-        self.frame[mask, 2] = self.background[mask] * 2.0
-        self.frame[~mask, :] *= 1.05
+        self.frame[mask, 0] = self.background[mask] * 1.8
+        self.frame[mask, 1] = self.background[mask] * 1.8
+        self.frame[mask, 2] = self.background[mask] * 1.8
+        self.frame[~mask, :] *= 1.07
 
     def build_scene(self, address):
         # create the noise background

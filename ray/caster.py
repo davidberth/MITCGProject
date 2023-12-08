@@ -88,60 +88,73 @@ def cast_ray(
         diffuse = materials[obji, :3]
         ambient = materials[obji, 3:6]
         specular = materials[obji, :3]
+        col = ambient
         shininess = 25.0
         pos = origin + t * direction
-        light_dir = light_pos[0] - pos
-        light_dir /= np.sqrt(
-            light_dir[0] * light_dir[0]
-            + light_dir[1] * light_dir[1]
-            + light_dir[2] * light_dir[2]
-        )
 
-        posa = pos + 0.0001 * light_dir
-        # let's find out if we are in shadow
-        shadow_obj = cast_shadow(
-            posa, light_dir, gtypes, geoms, aabbs, haabbs, hi, hk, labs, labsc
-        )
-
-        if shadow_obj == -1:
-            ldot = (
-                rnorm[0] * light_dir[0]
-                + rnorm[1] * light_dir[1]
-                + rnorm[2] * light_dir[2]
-            )
-            if ldot < 0.0:
-                ldot = 0.0
-
-            # Compute reflection of the light around the normal
-            reflection = 2 * ldot * rnorm - light_dir
-            reflection /= np.sqrt(
-                reflection[0] * reflection[0]
-                + reflection[1] * reflection[1]
-                + reflection[2] * reflection[2]
+        num_lights = light_pos.shape[0]
+        for li in range(num_lights):
+            light_dir = light_pos[li] - pos
+            lsquared = (
+                light_dir[0] * light_dir[0]
+                + light_dir[1] * light_dir[1]
+                + light_dir[2] * light_dir[2]
             )
 
-            # Compute view direction
-            view_dir = -direction
-            view_dir /= np.sqrt(
-                view_dir[0] * view_dir[0]
-                + view_dir[1] * view_dir[1]
-                + view_dir[2] * view_dir[2]
-            )
-            rdot = max(
-                0,
-                reflection[0] * view_dir[0]
-                + reflection[1] * view_dir[1]
-                + reflection[2] * view_dir[2],
-            )
-            # phong model
-            col = np.clip(
-                (diffuse * ldot + ambient + specular * rdot**shininess),
-                0.0,
-                1.0,
-            ).astype(np.float32)
+            if lsquared < light_prop[li, 4]:
+                light_dir /= np.sqrt(lsquared)
 
-        else:
-            col = ambient
+                posa = pos + 0.0001 * light_dir
+                # let's find out if we are in shadow
+                shadow_obj = cast_shadow(
+                    posa,
+                    light_dir,
+                    gtypes,
+                    geoms,
+                    aabbs,
+                    haabbs,
+                    hi,
+                    hk,
+                    labs,
+                    labsc,
+                )
+
+                if shadow_obj == -1:
+                    lcolor = light_prop[li, 1:4]
+                    ldot = (
+                        rnorm[0] * light_dir[0]
+                        + rnorm[1] * light_dir[1]
+                        + rnorm[2] * light_dir[2]
+                    )
+                    if ldot < 0.0:
+                        ldot = 0.0
+
+                    # Compute reflection of the light around the normal
+                    reflection = 2 * ldot * rnorm - light_dir
+                    reflection /= np.sqrt(
+                        reflection[0] * reflection[0]
+                        + reflection[1] * reflection[1]
+                        + reflection[2] * reflection[2]
+                    )
+
+                    # Compute view direction
+                    view_dir = -direction
+                    view_dir /= np.sqrt(
+                        view_dir[0] * view_dir[0]
+                        + view_dir[1] * view_dir[1]
+                        + view_dir[2] * view_dir[2]
+                    )
+                    rdot = max(
+                        0,
+                        reflection[0] * view_dir[0]
+                        + reflection[1] * view_dir[1]
+                        + reflection[2] * view_dir[2],
+                    )
+                    # phong model
+                    col = col + (
+                        lcolor
+                        * (diffuse * ldot + specular * (rdot**shininess))
+                    ).astype(np.float32)
 
     return col, hit
 

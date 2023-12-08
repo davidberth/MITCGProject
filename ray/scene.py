@@ -15,7 +15,20 @@ class Scene:
         self.light_pos = []
         self.light_prop = []
 
-        self.add_light((1000.0, 1000.0, -200.0), (100, 1.0, 1.0, 0.5))
+        for i in range(params.num_suns):
+            pox = np.random.randn() * 60.0
+            poy = np.random.randn() * 60.0
+            poz = np.random.randn() * 60.0
+
+            self.add_light(
+                (100 + pox, 1000.0 + poy, -200.0 + poz),
+                [
+                    10000.0,
+                    1.0 / float(params.num_suns),
+                    1.0 / float(params.num_suns),
+                    0.7 / float(params.num_suns),
+                ],
+            )
 
     def finalize(self):
         self.geometry = np.array(self.geometry, dtype=np.float32)
@@ -112,4 +125,5 @@ class Scene:
 
     def add_light(self, pos, prop):
         self.light_pos.append(pos)
+        prop.append(prop[0] ** 2)
         self.light_prop.append(prop)
